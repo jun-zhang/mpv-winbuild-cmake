@@ -31,7 +31,7 @@ jobs:
     env:
       BIT: ${{ matrix.bit }}
     container:
-      image: docker://ghcr.io/jun-zhang/archlinux:latest
+      image: docker://ghcr.io/shinchiro/archlinux:latest
 
     steps:
       - name: Get current date and random hash
