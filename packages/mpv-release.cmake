@@ -44,6 +44,7 @@ ExternalProject_Add(mpv-release
         DEST_OS=win32
         <SOURCE_DIR>/waf configure
         --enable-static-build
+        --debug-build
         --enable-pdf-build
         --disable-manpage-build
         --enable-libmpv-shared
