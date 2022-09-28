@@ -13,7 +13,7 @@ on:
       sourceforge:
         description: 'Upload to Sourceforge'
         required: false
-        default: true
+        default: false
         type: boolean
       github_release:
         description: 'Upload to Github release'
@@ -27,11 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        bit: [32, 64, 64-v3]
+        bit: [32]
     env:
       BIT: ${{ matrix.bit }}
     container:
-      image: docker://ghcr.io/shinchiro/archlinux:latest
+      image: docker://ghcr.io/jun-zhang/archlinux:latest
 
     steps:
       - name: Get current date and random hash
@@ -208,7 +208,7 @@ jobs:
           ssh-keyscan frs.sourceforge.net > /root/.ssh/known_hosts
           chmod 400 sf_key
           chmod -R 700 /root
-          sftp -i sf_key shinchiro@frs.sourceforge.net:/home/frs/project/mpv-player-windows <<END
+          sftp -i sf_key jun-zhang@frs.sourceforge.net:/home/frs/project/mpv-player-windows <<END
           put release/mpv-dev*           libmpv
           put release/mpv-i686*          32bit
           put release/mpv-x86_64-[!v3]*  64bit
@@ -223,10 +223,10 @@ jobs:
           SHORT_DATE: ${{ env.short_date }}
         run: |
           body=$(cat <<END
-          ![GitHub release (by tag)](https://img.shields.io/github/downloads/shinchiro/mpv-winbuild-cmake/$SHORT_DATE/total?label=Downloads)
+          ![GitHub release (by tag)](https://img.shields.io/github/downloads/jun-zhang/mpv-winbuild-cmake/$SHORT_DATE/total?label=Downloads)
           END
           )
-          id=$(curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases -d @- <<END | jq -r '.id'
+          id=$(curl -u jun-zhang:$GH_TOKEN $CURL_RETRIES -s -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/jun-zhang/mpv-winbuild-cmake/releases -d @- <<END | jq -r '.id'
           {
             "tag_name": "$SHORT_DATE",
             "name": "$SHORT_DATE",
@@ -234,7 +234,7 @@ jobs:
           }
           END
           )
-          for file in release/*.7z; do curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -X POST -H "Accept: application/vnd.github.v3+json" -H "Content-Type: $(file -b --mime-type $file)" https://uploads.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/$id/assets?name=$(basename $file) --data-binary @$file; done
+          for file in release/*.7z; do curl -u jun-zhang:$GH_TOKEN $CURL_RETRIES -X POST -H "Accept: application/vnd.github.v3+json" -H "Content-Type: $(file -b --mime-type $file)" https://uploads.github.com/repos/jun-zhang/mpv-winbuild-cmake/releases/$id/assets?name=$(basename $file) --data-binary @$file; done
 
       - name: Pruning tags
         id: prune_tags
@@ -245,11 +245,11 @@ jobs:
           tag_list=($(git tag | sort -r))
           old=${tag_list[@]:30}
           for tag in ${old[@]}; do
-            id=$(curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -X GET -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/tags/$tag | jq -r '.id')
-            curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/$id
+            id=$(curl -u jun-zhang:$GH_TOKEN $CURL_RETRIES -s -X GET -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/jun-zhang/mpv-winbuild-cmake/releases/tags/$tag | jq -r '.id')
+            curl -u jun-zhang:$GH_TOKEN $CURL_RETRIES -s -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/jun-zhang/mpv-winbuild-cmake/releases/$id
             git tag -d $tag
           done
-          git push --tags --prune https://shinchiro:$GH_TOKEN@github.com/shinchiro/mpv-winbuild-cmake
+          git push --tags --prune https://jun-zhang:$GH_TOKEN@github.com/jun-zhang/mpv-winbuild-cmake
 
   gist:
     name: Gist
@@ -268,10 +268,10 @@ jobs:
       - name: Upload job logs to gist
         id: upload_job_log
         run: |
-          url=$(curl -su shinchiro:$GH_TOKEN -X GET -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/runs/$RUN_ID/jobs | jq -r '.jobs[0] | .url')
-          curl -sLu shinchiro:$GH_TOKEN -X GET -H "Accept: application/vnd.github.v3+json" $url/logs -o mpv_log
-          git clone --depth 1 https://shinchiro:$GH_TOKEN@gist.github.com/90308c6632c9010d03b325c9ca6a4b6f job_log
+          url=$(curl -su jun-zhang:$GH_TOKEN -X GET -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/jun-zhang/mpv-winbuild-cmake/actions/runs/$RUN_ID/jobs | jq -r '.jobs[0] | .url')
+          curl -sLu jun-zhang:$GH_TOKEN -X GET -H "Accept: application/vnd.github.v3+json" $url/logs -o mpv_log
+          git clone --depth 1 https://jun-zhang:$GH_TOKEN@gist.github.com/90308c6632c9010d03b325c9ca6a4b6f job_log
           cp -f mpv_log job_log/mpv_log
           git -C job_log add .
           git -C job_log commit --amend --no-edit
-          git -C job_log push -f https://shinchiro:$GH_TOKEN@gist.github.com/90308c6632c9010d03b325c9ca6a4b6f
+          git -C job_log push -f https://jun-zhang:$GH_TOKEN@gist.github.com/90308c6632c9010d03b325c9ca6a4b6f
